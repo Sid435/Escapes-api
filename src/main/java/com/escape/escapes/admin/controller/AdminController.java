@@ -41,12 +41,12 @@ public class AdminController {
     private RefreshTokenRepo refreshTokenRepo;
 
     @PostMapping("/add-user")
-//    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Admin> addUser(Admin admin){
         return ResponseEntity.ok(service.addUser(admin));
     }
     @GetMapping("/authenticate")
-    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER)")
+//    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
     public ResponseEntity<JwtToken> authenticationTokenGeneration(AuthRequest request){
         String email = request.getEmail();
 

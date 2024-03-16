@@ -1,4 +1,4 @@
-package com.escape.escapes.admin.model;
+package com.escape.escapes.token.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,5 +1,6 @@
-package com.escape.escapes.admin.model;
+package com.escape.escapes.token.model;
 
+import com.escape.escapes.admin.model.Admin;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

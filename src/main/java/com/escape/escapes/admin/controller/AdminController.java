@@ -7,7 +7,9 @@ import com.escape.escapes.admin.service.AdminService;
 import com.escape.escapes.token.model.JwtToken;
 import com.escape.escapes.token.model.RefreshToken;
 import com.escape.escapes.token.repo.RefreshTokenRepo;
+import com.escape.escapes.token.service.JwtService;
 import com.escape.escapes.token.service.RefreshTokenService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -15,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
@@ -38,21 +37,23 @@ public class AdminController {
     private AdminService service;
 
     @Autowired
+    private JwtService jwtService;
+
+    @Autowired
     private RefreshTokenRepo refreshTokenRepo;
 
     @PostMapping("/add-user")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Admin> addUser(Admin admin){
+    @SecurityRequirement(name = "Bearer Authentication")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<Admin> addUser(@RequestBody Admin admin){
         return ResponseEntity.ok(service.addUser(admin));
     }
-    @GetMapping("/authenticate")
-//    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
-    public ResponseEntity<JwtToken> authenticationTokenGeneration(AuthRequest request){
+    @PostMapping("/authenticate")
+    public ResponseEntity<JwtToken> authenticationTokenGeneration(@RequestBody AuthRequest request){
         String email = request.getEmail();
 
         JwtToken token = new JwtToken();
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, request.getPassword()));
-
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword().toString()));
         if(authentication.isAuthenticated()){
             Optional<RefreshToken> refreshTokenCheck = refreshTokenRepo.findByUserEmail(email);
             RefreshToken refreshToken = new RefreshToken();
@@ -63,13 +64,18 @@ public class AdminController {
                 }catch (RuntimeException e){
                     refreshToken = refreshTokenService.createRefreshToken(email);
                 }
+            }else{
+                refreshToken = refreshTokenService.createRefreshToken(email);
             }
+
+
             Optional<Admin> adminOption = adminRepo.findByEmail(email);
             if(adminOption.isPresent()){
                 Admin admin = adminOption.get();
                 token.setId(admin.getId());
                 token.setEmail(admin.getEmail());
                 token.setLogCount(admin.getLogCount());
+                token.setToken(jwtService.generateToken(email));
                 token.setRefreshToken(refreshToken.getToken());
                 token.setAccessTokenExpirationDate(System.currentTimeMillis() + 24*60*60*1000);
                 token.setVerification(admin.isVerification());
@@ -81,6 +87,8 @@ public class AdminController {
             }
 
         }else{
+
+            System.out.println("Failed");
             Optional<Admin> admin = adminRepo.findByEmail(email);
             if(admin.isPresent()){
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

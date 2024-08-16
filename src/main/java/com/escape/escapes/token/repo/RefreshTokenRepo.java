@@ -4,7 +4,6 @@ import com.escape.escapes.token.model.RefreshToken;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.Optional;
 

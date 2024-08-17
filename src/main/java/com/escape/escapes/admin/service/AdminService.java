@@ -187,7 +187,6 @@ public class AdminService {
         message.setText(body + "\n Otp is : "+ text);
 
         mailSender.send(message);
-
     }
 
 }
